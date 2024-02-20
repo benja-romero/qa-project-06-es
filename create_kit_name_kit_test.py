@@ -21,8 +21,9 @@ def positive_assert(name):
     kit_response = sender_stand_request.post_new_client_kit(kit_body)
     # Comprueba si el código de estado es 201
     assert kit_response.status_code == 201
-    # Comprueba que el resultado de la solicitud se guarda en kits_table_response
-    kits_table_response = sender_stand_request.get_kits_table()
+    '''Adicón de código para verificar que los cuerpos de la solicitud y de la respuesta coinciden en el campo "name"'''
+    # verifica que el campo "name" del cuerpo de la respuesta concide con el campo "name" del cuerpo de la solicitud
+    assert kit_response.json()["name"] == kit_body["name"]
 
 
 
@@ -44,7 +45,8 @@ def negative_assert_code_400(name):
 # Función de prueba negativa para cuando no se pasa el parámetro a la solicitud
 def negative_assert_no_parameter(name):
     # Guarda el resultado de llamar a la función a la variable "response"
-    kit_response = sender_stand_request.post_new_user(name)
+    '''corrección de código, para mandar llamar la función de creación de kit nuevo'''
+    kit_response = sender_stand_request.post_new_client_kit(name)
     # Comprueba si la respuesta contiene el código 400
     assert kit_response.status_code == 400
     # Comprueba si el atributo "code" en el cuerpo de respuesta es 400

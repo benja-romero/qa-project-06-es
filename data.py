@@ -1,6 +1,5 @@
 headers = {
-    "Content-Type": "application/json",
-    "Authorization": "Bearer jknnFApafP4awfAIFfafam2fma"
+    "Content-Type": "application/json" #se eliminó el token del archivo data.py para generar uno automático en sender_stand_request.py
 }
 
 user_body = {

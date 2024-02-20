@@ -3,8 +3,11 @@
 
 
 
-En este proyecto se crea un usuario nuevo en Urban Grocers y a partir de ello se hacen pruebas para el campo "name" de un kit nuevo; obteniendo como resultado 6 de las 9 preubas como aprobadas; las pruebas donde se pasa un string vacío, un número de caracteres mayor al permitido y un valor de tipo numérico son las pruebas que no son aprobadas.
+En este proyecto se crea un usuario nuevo en Urban Grocers y a partir de ello se hacen pruebas para el campo "name" de un kit nuevo; obteniendo como resultado 5 de las 9 preubas como aprobadas; las pruebas donde se pasa un string vacío, un número de caracteres mayor al permitido, un valor de tipo numérico y la prueba donde no se pasa ningún valor, son las que fueron no aprobadas.
 
+ __Las pruebas se realizaron con base en la documentación del Apidoc de Urban Grocers; la técnica fue a través de automatización de pruebas con lenguaje de programación Python en su versión 3.12, utilizando como IDE a PyCharm en su versión Community 2023.3.3__
+ 
+ 
 La lista de comprobación usada es la siguiente:
 
 
@@ -31,8 +34,7 @@ Primero hay que agregar los siguientes endpoints al archivo configuration.py:
 
 - /api/v1/users/
 - /api/v1/kits
-- /api/db/resources/kit_model.csv
-- /api/db/resources/user_model.csv
+
 
 Se crea un archivo llamado data.py donde se deben agregar los datos que se pasarán por las solicitudes.
 
@@ -52,16 +54,30 @@ def post_new_user(body):
     return requests.post(configuration.URL_SERVICE + configuration.CREATE_USER_PATH,  # inserta la dirección URL completa
                          json=body,  # inserta el cuerpo de solicitud
                          headers=data.headers)  # inserta los encabezados
+
+response_new_user = post_new_user(data.user_body);
 ```
 
-Una vez creado el usuario nuevo y teniendo el token de autorización se procede a mandar la solicitud para crear un nuevo kit dentro del mismo archivo sender_stand_request.py :
+Una vez creado el usuario nuevo se obtiene el token de autorización mediante la siguiente función dentro del arichivo sender_stand_request.py :
+
+```sh
+#función para obtener un token nuevo
+def get_new_user_token(authToken):
+    return requests.get(configuration.URL_SERVICE + configuration.CREATE_USER_PATH,
+                        headers=authToken)
+
+data.headers["Authorization"] = "Bearer " + response_new_user.json()["authToken"]
+authToken = data.headers.copy();
+```
+
+Tendiendo el usuario nuevo y el token de autorización se procede a crear un nuevo kit:
 
 ```sh
 #solicitud para crear un kit nuevo
 def post_new_client_kit(kit):
     return requests.post(configuration.URL_SERVICE + configuration.KITS_PATH,  # inserta la dirección URL completa
                         json=kit,  # inserta el cuerpo de solicitud
-                        headers=data.headers)  # inserta los encabezados
+                        headers=authToken) # inserta los encabezados
 ```
 
 Teniendo la solicitud para crear un kit nuevo se procede a añadir las funciones para realizar las pruebas de la lista de comprobación dentro del archivo create_kit_name_kit_test.py 
@@ -90,8 +106,8 @@ def positive_assert(name):
     kit_response = sender_stand_request.post_new_client_kit(kit_body)
     # Comprueba si el código de estado es 201
     assert kit_response.status_code == 201
-    # Comprueba que el resultado de la solicitud se guarda en kits_table_response
-    kits_table_response = sender_stand_request.get_kits_table()
+    # verifica que el campo "name" del cuerpo de la respuesta concide con el campo "name" del cuerpo de la solicitud
+    assert kit_response.json()["name"] == kit_body["name"]
 ```
 
 La siguiente función a declarar es la de las pruebas negativas:
@@ -115,7 +131,7 @@ También se tiene que declarar una función para el caso en el que no se pasa ni
 # Función de prueba negativa para cuando no se pasa el parámetro a la solicitud
 def negative_assert_no_parameter(name):
     # Guarda el resultado de llamar a la función a la variable "response"
-    kit_response = sender_stand_request.post_new_user(name)
+    kit_response = sender_stand_request.post_new_client_kit(name)
     # Comprueba si la respuesta contiene el código 400
     assert kit_response.status_code == 400
     # Comprueba si el atributo "code" en el cuerpo de respuesta es 400
